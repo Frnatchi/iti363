@@ -1,33 +1,28 @@
 import os
 import telebot
-import yt_dlp
+from flask import Flask, request
 
 # استبدل 'YOUR_BOT_TOKEN' بتوكن البوت الخاص بك
 TOKEN = '8145006862:AAFWjlFMrOh0G7kQcpj2GtgMB-Ut8QxNoHU'
 bot = telebot.TeleBot(TOKEN)
 
-def is_valid_tiktok_url(url):
-    """تحقق مما إذا كان الرابط صالحًا لـ TikTok"""
-    domains = [
-        'tiktok.com',
-        'vm.tiktok.com',
-        'vt.tiktok.com'
-    ]
-    return any(domain in url for domain in domains)
+app = Flask(__name__)
 
+# تعريف مسار Webhook
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
+    bot.process_new_updates([update])
+    return 'ok', 200
+
+# تعريف الأوامر ومعالجات الرسائل
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.reply_to(message, "مرحبًا! 🎬 أرسل رابط فيديو TikTok وسأحمّله لك.")
 
-@bot.message_handler(func=lambda m: True)
+@bot.message_handler(func=lambda message: True)
 def download_video(message):
     url = message.text
-    
-    # التحقق من صحة الرابط أولاً
-    if not is_valid_tiktok_url(url):
-        bot.reply_to(message, "❌ الرابط غير صالح! يرجى إرسال رابط TikTok صحيح")
-        return
-        
     try:
         # إعداد خيارات التنزيل
         ydl_opts = {
@@ -55,6 +50,8 @@ def download_video(message):
     except Exception as e:
         bot.reply_to(message, f"❌ خطأ في التحميل: {str(e)}")
 
+# تعيين Webhook عند تشغيل التطبيق
 if __name__ == '__main__':
-    print("البوت يعمل...")
-    bot.polling()
+    bot.remove_webhook()
+    bot.set_webhook(url='https://iti363.onrender.com/webhook')
+    app.run(host='0.0.0.0', port=10000)

@@ -1,5 +1,4 @@
 pyTelegramBotAPI
-yt-dlp
-Flask
-gunicorn
-snapchat-dl
+   yt-dlp
+   snapchat-dl
+   flask

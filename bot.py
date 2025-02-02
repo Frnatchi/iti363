@@ -1,11 +1,39 @@
 import os
 import telebot
+from flask import Flask, request
 import yt_dlp
 from snapchat_dl import SnapchatDL
 
 # استبدل 'YOUR_BOT_TOKEN' بتوكن البوت الخاص بك
 TOKEN = '8145006862:AAFWjlFMrOh0G7kQcpj2GtgMB-Ut8QxNoHU'
 bot = telebot.TeleBot(TOKEN)
+
+app = Flask(__name__)
+
+# تعريف مسار Webhook
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
+    bot.process_new_updates([update])
+    return 'ok', 200
+
+# تعريف الأوامر ومعالجات الرسائل
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    bot.reply_to(message, "مرحبًا! 🎬 أرسل رابط فيديو TikTok أو YouTube أو صورة Snapchat وسأحاول تحميلها لك.")
+
+@bot.message_handler(func=lambda message: True)
+def handle_message(message):
+    url = message.text
+    
+    if is_valid_url(url, "tiktok"):
+        download_tiktok(message)
+    elif is_valid_url(url, "youtube"):
+        download_youtube(message)
+    elif is_valid_url(url, "snapchat"):
+        download_snapchat(message)
+    else:
+        bot.reply_to(message, "❌ الرابط غير مدعوم! يرجى إرسال رابط TikTok أو YouTube أو Snapchat صحيح.")
 
 def is_valid_url(url, platform):
     """تحقق من صحة الرابط بناءً على المنصة"""
@@ -18,24 +46,6 @@ def is_valid_url(url, platform):
     else:
         return False
     return any(domain in url for domain in domains)
-
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    bot.reply_to(message, "مرحبًا! 🎬 أرسل رابط فيديو TikTok أو YouTube أو صورة Snapchat وسأحاول تحميلها لك.")
-
-@bot.message_handler(func=lambda m: True)
-def download_content(message):
-    url = message.text
-    
-    # تحديد المنصة بناءً على الرابط
-    if is_valid_url(url, "tiktok"):
-        download_tiktok(message)
-    elif is_valid_url(url, "youtube"):
-        download_youtube(message)
-    elif is_valid_url(url, "snapchat"):
-        download_snapchat(message)
-    else:
-        bot.reply_to(message, "❌ الرابط غير مدعوم! يرجى إرسال رابط TikTok أو YouTube أو Snapchat صحيح.")
 
 def download_tiktok(message):
     url = message.text
@@ -91,6 +101,8 @@ def download_snapchat(message):
     except Exception as e:
         bot.reply_to(message, f"❌ خطأ في تحميل الصورة من Snapchat: {str(e)}")
 
+# تعيين Webhook عند تشغيل التطبيق
 if __name__ == '__main__':
-    print("البوت يعمل...")
-    bot.polling()
+    bot.remove_webhook()
+    bot.set_webhook(url='https://iti363.onrender.com/webhook')
+    app.run(host='0.0.0.0', port=10000)

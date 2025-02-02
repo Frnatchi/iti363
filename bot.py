@@ -1,10 +1,10 @@
-import os
+⁹import os
 import telebot
 import yt_dlp
 from snapchat_dl import SnapchatDL
 
 # استبدل 'YOUR_BOT_TOKEN' بتوكن البوت الخاص بك
-TOKEN = 'YOUR_BOT_TOKEN'
+TOKEN = '8145006862:AAFWjlFMrOh0G7kQcpj2GtgMB-Ut8QxNoHU'
 bot = telebot.TeleBot(TOKEN)
 
 def is_valid_url(url, platform):

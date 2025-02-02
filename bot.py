@@ -1,4 +1,4 @@
-⁹import os
+import os
 import telebot
 import yt_dlp
 from snapchat_dl import SnapchatDL
